@@ -1,0 +1,33 @@
+{
+  "name": "mial-tours",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@fontsource/alef": "^5.2.8",
+    "@fontsource/frank-ruhl-libre": "^5.2.8",
+    "@fontsource/noto-sans-hebrew": "^5.2.8",
+    "@fontsource/noto-serif-hebrew": "^5.2.8",
+    "@react-pdf/renderer": "^3.4.4",
+    "csv-parse": "^5.5.6",
+    "csv-stringify": "^6.4.6",
+    "date-fns": "^3.6.0",
+    "googleapis": "^171.4.0",
+    "next": "14.2.3",
+    "next-auth": "^4.24.14",
+    "nodemailer": "^8.0.7",
+    "react": "^18",
+    "react-dom": "^18",
+    "resend": "^6.12.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.0.1",
+    "postcss": "^8",
+    "tailwindcss": "^3.3.0"
+  }
+}

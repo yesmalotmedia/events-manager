@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-main:   'Heebo', sans-serif;
+  --brand:       #2C4A7C;
+  --brand-mid:   #4A7FA5;
+  --brand-light: #eef3fa;
+  --gold:        #B8860B;
+  --gold-light:  #f9edbb;
+  --bg:          #F5F0E8;
+  --surface:     #ffffff;
+  --border:      #E8DFD0;
+  --text:        #2A1F14;
+  --text-muted:  #755F4D;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  direction: rtl;
+  font-family: var(--font-main);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-brand-500 hover:bg-brand-600 text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm;
+  }
+  .btn-secondary {
+    @apply bg-white hover:bg-stone-100 text-stone-700 font-medium px-4 py-2 rounded-lg border border-stone-200 transition-colors text-sm;
+  }
+  .btn-gold {
+    @apply bg-gold-500 hover:bg-gold-600 text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm;
+  }
+  .btn-danger {
+    @apply bg-red-50 hover:bg-red-100 text-red-600 font-medium px-4 py-2 rounded-lg transition-colors text-sm;
+  }
+  .card {
+    @apply bg-white rounded-xl border border-stone-200 shadow-sm;
+  }
+  .input {
+    @apply w-full border border-stone-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-400 transition-all;
+  }
+  .label {
+    @apply block text-xs font-medium text-stone-500 mb-1;
+  }
+  .badge-green  { @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700; }
+  .badge-yellow { @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700; }
+  .badge-red    { @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-600; }
+  .badge-blue   { @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-brand-50 text-brand-600; }
+  .badge-gold   { @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gold-50 text-gold-600; }
+}
