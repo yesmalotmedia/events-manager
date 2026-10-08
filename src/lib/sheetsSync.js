@@ -1,5 +1,4 @@
 import { google } from "googleapis";
-import { readCsv } from "./csv";
 const MAIN_SHEET_ID = "1W1OGFiTSaOkDejQSWSSZIucQyAgGj1wOYlupvGYy65o";
 const MAIN_SHEET_GID = 123815026;
 const CHECKBOX_COL = 45;
@@ -51,6 +50,54 @@ async function getLastRow(sheets, sheetName) {
   return rows.length;
 }
 
+// Columns the app is allowed to write. Everything else in the row —
+// the per-supplier cost columns (P:AL) and the "יתרה" column (AP) — is
+// maintained by hand directly in the sheet and must never be touched by
+// a sync. A previous version of this file wrote one 45-wide range
+// (A:AS) on every sync, which silently blanked out those hand-entered
+// columns on every tour save. Writing only these three narrow ranges
+// keeps the sync additive instead of destructive.
+async function writeOwnedColumns(sheets, sheetName, rowNum, tour) {
+  const basicFields = [
+    tour.timestamp || "",
+    tour.client_name || "",
+    tour.client_id || "",
+    tour.contact_name || "",
+    tour.contact_phone || "",
+    tour.contact_email || "",
+    tour.participants_desc || "",
+    tour.num_participants || "",
+    tour.event_type || "",
+    tour.notes || "",
+    tour.date || "",
+    tour.time || "",
+    tour.location || "",
+    tour.payment_method || "",
+    tour.total_amount || "",
+  ];
+  const financeFields = [
+    tour.expenses_total || "",
+    tour.commission || "",
+    tour.net_payment || "",
+  ];
+
+  await sheets.spreadsheets.values.batchUpdate({
+    spreadsheetId: MAIN_SHEET_ID,
+    requestBody: {
+      valueInputOption: "USER_ENTERED",
+      data: [
+        { range: `${sheetName}!A${rowNum}:O${rowNum}`, values: [basicFields] },
+        { range: `${sheetName}!AM${rowNum}:AO${rowNum}`, values: [financeFields] },
+        {
+          range: `${sheetName}!AS${rowNum}`,
+          values: [[tour.sent_to_accounting === "true"]],
+        },
+      ],
+    },
+  });
+  return rowNum;
+}
+
 export async function markCheckboxInSheet(tour) {
   const auth = getAuth();
   const sheets = google.sheets({ version: "v4", auth });
@@ -62,16 +109,9 @@ export async function markCheckboxInSheet(tour) {
   }
 
   if (rowNum === -1) {
-    const newRow = buildSheetRow(tour);
     const lastRow = await getLastRow(sheets, sheetName);
-    const nextRow = lastRow + 1;
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: MAIN_SHEET_ID,
-      range: `${sheetName}!A${nextRow}`,
-      valueInputOption: "USER_ENTERED",
-      requestBody: { values: [newRow] },
-    });
-    rowNum = nextRow;
+    rowNum = lastRow + 1;
+    await writeOwnedColumns(sheets, sheetName, rowNum, tour);
   }
 
   const colLetter = colToLetter(CHECKBOX_COL);
@@ -86,9 +126,6 @@ export async function markCheckboxInSheet(tour) {
 }
 
 export async function syncTourToSheet(tour) {
-  // Load expenses for this tour
-  const allExpenses = readCsv("expenses.csv");
-  const expenses = allExpenses.filter((e) => e.tour_id === String(tour.id));
   const auth = getAuth();
   const sheets = google.sheets({ version: "v4", auth });
   const sheetName = await getSheetName(sheets);
@@ -98,77 +135,28 @@ export async function syncTourToSheet(tour) {
     rowNum = await findRowByTimestamp(sheets, sheetName, tour.timestamp);
   }
 
-  const rowData = buildSheetRow(tour);
-
   if (rowNum === -1) {
-    // Find actual last row and write after it
     const lastRow = await getLastRow(sheets, sheetName);
-    const nextRow = lastRow + 1;
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: MAIN_SHEET_ID,
-      range: `${sheetName}!A${nextRow}`,
-      valueInputOption: "USER_ENTERED",
-      requestBody: { values: [rowData] },
-    });
-  } else {
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: MAIN_SHEET_ID,
-      range: `${sheetName}!A${rowNum}`,
-      valueInputOption: "USER_ENTERED",
-      requestBody: { values: [rowData] },
-    });
+    rowNum = lastRow + 1;
   }
+
+  await writeOwnedColumns(sheets, sheetName, rowNum, tour);
 }
 
-const SUPPLIER_COLS = {
-  15: "סער",
-  16: "לביא",
-  17: "אסי",
-  18: "דן קידר",
-  19: "עומרי",
-  20: "סאונדמן",
-  21: "שמוליק הגברה",
-  22: "דן דן",
-  23: "מאיר",
-  24: "אביעד מתופף",
-  25: "נגן מחליף",
-  26: "לבנות מנהרות",
-  27: "גאיה עוזרת הפקה",
-  28: "פלאפל",
-  29: "לחוח",
-  30: "אוירא",
-  31: "מזקקה",
-  32: "בלה",
-  33: "מאיהיה",
-  34: "רויטל",
-  35: "מדריכים",
-  36: "בית כנסת",
-  37: "מרק - ישיבה",
-};
-
-function buildSheetRow(tour, expenses = []) {
-  const row = new Array(45).fill("");
-  row[0] = tour.timestamp || "";
-  row[1] = tour.client_name || "";
-  row[2] = tour.client_id || "";
-  row[3] = tour.contact_name || "";
-  row[4] = tour.contact_phone || "";
-  row[5] = tour.contact_email || "";
-  row[6] = tour.participants_desc || "";
-  row[7] = tour.num_participants || "";
-  row[8] = tour.event_type || "";
-  row[9] = tour.notes || "";
-  row[10] = tour.date || "";
-  row[11] = tour.time || "";
-  row[12] = tour.location || "";
-  row[13] = tour.payment_method || "";
-  row[14] = tour.total_amount || "";
-  row[38] = tour.expenses_total || "";
-  row[39] = tour.commission || "";
-  row[40] = tour.net_payment || "";
-  row[44] = tour.sent_to_accounting === "true";
-  return row;
-}
+// Reference only — NOT used by any sync code (sheet columns P:AL,
+// 1-based 16:38 / 0-based 15:37). Hand-filled by whoever is editing the
+// sheet directly. Kept here as the known column layout in case a future
+// feature auto-fills supplier costs from the app's expense records —
+// note col 20 ("סאונדמן") has drifted from the sheet's current header
+// ("שחקן/רב"), so re-verify against the live header before relying on it.
+// const SUPPLIER_COLS = {
+//   15: "סער", 16: "לביא", 17: "אסי", 18: "דן קידר", 19: "עומרי",
+//   20: "סאונדמן", 21: "שמוליק הגברה", 22: "דן דן", 23: "מאיר",
+//   24: "אביעד מתופף", 25: "נגן מחליף", 26: "לבנות מנהרות",
+//   27: "גאיה עוזרת הפקה", 28: "פלאפל", 29: "לחוח", 30: "אוירא",
+//   31: "מזקקה", 32: "בלה", 33: "מאיהיה", 34: "רויטל", 35: "מדריכים",
+//   36: "בית כנסת", 37: "מרק - ישיבה",
+// };
 
 function colToLetter(col) {
   let letter = "";
