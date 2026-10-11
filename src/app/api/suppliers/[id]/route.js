@@ -13,6 +13,10 @@ export async function PUT(request, { params }) {
       body.my_rate || body.default_rate || suppliers[idx].default_rate,
     my_rate: body.my_rate || suppliers[idx].my_rate || "",
     client_rate: body.client_rate || suppliers[idx].client_rate || "",
+    bills_separately:
+      body.bills_separately === true || body.bills_separately === "true"
+        ? "true"
+        : "false",
   };
   writeCsv("suppliers.csv", suppliers);
   return Response.json(suppliers[idx]);

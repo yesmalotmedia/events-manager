@@ -14,6 +14,7 @@ export default function SuppliersPage() {
     my_rate: "",
     client_rate: "",
     type: "תוכן",
+    bills_separately: false,
   });
   const [saving, setSaving] = useState(false);
 
@@ -41,6 +42,7 @@ export default function SuppliersPage() {
       my_rate: s.my_rate || s.default_rate || "",
       client_rate: s.client_rate || s.default_rate || "",
       type: s.type || "תוכן",
+      bills_separately: s.bills_separately === "true",
     });
     setShowForm(true);
   };
@@ -55,6 +57,7 @@ export default function SuppliersPage() {
       my_rate: "",
       client_rate: "",
       type: "תוכן",
+      bills_separately: false,
     });
     setShowForm(false);
   };
@@ -161,6 +164,21 @@ export default function SuppliersPage() {
                   <option value="ספק חיצוני">ספק חיצוני</option>
                 </select>
               </div>
+              <div className="flex items-end pb-2">
+                <label className="flex items-center gap-2 text-xs text-stone-600">
+                  <input
+                    type="checkbox"
+                    checked={form.bills_separately}
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        bills_separately: e.target.checked,
+                      }))
+                    }
+                  />
+                  ברירת מחדל: תוספת בתשלום נפרד
+                </label>
+              </div>
               <div className="flex items-end gap-2">
                 <button
                   type="submit"
@@ -207,20 +225,23 @@ export default function SuppliersPage() {
               <th className="text-right px-4 py-3 font-medium text-stone-600">
                 סוג
               </th>
+              <th className="text-right px-4 py-3 font-medium text-stone-600">
+                תוספת בתשלום נפרד
+              </th>
               <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-50">
             {loading && (
               <tr>
-                <td colSpan={6} className="text-center py-8 text-stone-400">
+                <td colSpan={7} className="text-center py-8 text-stone-400">
                   טוען...
                 </td>
               </tr>
             )}
             {!loading && suppliers.length === 0 && (
               <tr>
-                <td colSpan={6} className="text-center py-8 text-stone-400">
+                <td colSpan={7} className="text-center py-8 text-stone-400">
                   אין ספקים
                 </td>
               </tr>
@@ -244,6 +265,9 @@ export default function SuppliersPage() {
                 </td>
                 <td className="px-4 py-3 text-stone-500 text-xs">
                   {s.type || "תוכן"}
+                </td>
+                <td className="px-4 py-3 text-stone-500 text-xs">
+                  {s.bills_separately === "true" ? "כן" : "לא"}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2 justify-end">

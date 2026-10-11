@@ -29,6 +29,7 @@ const EMPTY_EXPENSE = {
   my_cost: "",
   client_cost: "",
   notes: "",
+  add_to_total: false,
 };
 
 export default function TourDetailPage() {
@@ -78,7 +79,11 @@ export default function TourDetailPage() {
     await fetch("/api/expenses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...expenseForm, tour_id: id }),
+      body: JSON.stringify({
+        ...expenseForm,
+        add_to_total: expenseForm.add_to_total ? "true" : "false",
+        tour_id: id,
+      }),
     });
     setAddingExpense(false);
     setExpenseForm(EMPTY_EXPENSE);
@@ -445,6 +450,9 @@ export default function TourDetailPage() {
                                   "",
                               )
                             : f.client_cost,
+                          add_to_total: sup
+                            ? sup.bills_separately === "true"
+                            : f.add_to_total,
                         }));
                       }}
                     >
@@ -526,6 +534,21 @@ export default function TourDetailPage() {
                       }
                     />
                   </div>
+                  <div className="flex items-end pb-2">
+                    <label className="flex items-center gap-2 text-xs text-stone-600">
+                      <input
+                        type="checkbox"
+                        checked={expenseForm.add_to_total}
+                        onChange={(e) =>
+                          setExpenseForm((f) => ({
+                            ...f,
+                            add_to_total: e.target.checked,
+                          }))
+                        }
+                      />
+                      תוספת בתשלום נפרד (מתווסף לסכום הכולל)
+                    </label>
+                  </div>
                 </div>
 
                 {/* Live calculation preview */}
@@ -550,6 +573,17 @@ export default function TourDetailPage() {
                         סה"כ ללקוח:{" "}
                         <strong className="text-stone-800">
                           ₪{fTotalClient.toLocaleString("he-IL")}
+                        </strong>
+                      </span>
+                    )}
+                    {expenseForm.add_to_total && fClient > 0 && (
+                      <span className="text-stone-500">
+                        סכום הסיור יעלה ל-
+                        <strong className="text-stone-800">
+                          ₪
+                          {(totalAmount + fTotalClient).toLocaleString(
+                            "he-IL",
+                          )}
                         </strong>
                       </span>
                     )}
@@ -612,6 +646,15 @@ export default function TourDetailPage() {
                         <tr key={exp.id} className="hover:bg-stone-50">
                           <td className="px-4 py-2 font-medium text-stone-800">
                             {exp.supplier_name}
+                            {exp.add_to_total === "true" && (
+                              <span
+                                className="text-xs mr-1 px-1.5 py-0.5 rounded"
+                                style={{ background: "#eef3fa", color: "#4A7FA5" }}
+                                title="מתווסף לסכום הכולל של הסיור"
+                              >
+                                תוספת
+                              </span>
+                            )}
                             {exp.notes && (
                               <span className="text-stone-400 text-xs mr-1">
                                 {" "}

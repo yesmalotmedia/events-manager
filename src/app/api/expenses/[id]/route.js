@@ -26,6 +26,12 @@ export async function DELETE(request, { params }) {
       const tours = readCsv("tours.csv");
       const tourIdx = tours.findIndex((t) => t.id === expense.tour_id);
       if (tourIdx !== -1) {
+        if (expense.add_to_total === "true") {
+          const qty = parseFloat(expense.quantity || 1);
+          const clientCost = parseFloat(expense.client_cost || 0);
+          const currentTotal = parseFloat(tours[tourIdx].total_amount) || 0;
+          tours[tourIdx].total_amount = String(currentTotal - qty * clientCost);
+        }
         const remaining = filtered.filter((e) => e.tour_id === expense.tour_id);
         const totalAmount = parseFloat(tours[tourIdx].total_amount) || 0;
         const { expTotal, commission, net } = calcNet(totalAmount, remaining);

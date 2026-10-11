@@ -25,6 +25,10 @@ export async function POST(request) {
       default_rate: body.my_rate || body.default_rate || "",
       my_rate: body.my_rate || body.default_rate || "",
       client_rate: body.client_rate || body.my_rate || body.default_rate || "",
+      // Default for new expenses using this supplier: does the client price
+      // get added on top of the tour's total, or is it baked into a fixed
+      // package price already? Per-expense, overridable.
+      bills_separately: body.bills_separately === true || body.bills_separately === "true" ? "true" : "false",
     };
     suppliers.push(newSupplier);
     writeCsv("suppliers.csv", suppliers);

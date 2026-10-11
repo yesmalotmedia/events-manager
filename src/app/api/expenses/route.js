@@ -31,6 +31,10 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const expenses = readCsv("expenses.csv");
+    const addToTotal =
+      body.add_to_total === true || body.add_to_total === "true"
+        ? "true"
+        : "false";
     const newExpense = {
       id: getNextId(expenses),
       tour_id: body.tour_id || "",
@@ -41,6 +45,11 @@ export async function POST(request) {
       client_cost: body.client_cost || body.my_cost || body.amount || "0",
       amount: body.my_cost || body.amount || "0", // backward compat
       notes: body.notes || "",
+      // Does the client price of this expense get added on top of the
+      // tour's total_amount (an à-la-carte add-on), or is it already
+      // covered by a fixed package price? See src/app/suppliers/page.js
+      // for the per-supplier default this is seeded from.
+      add_to_total: addToTotal,
     };
     expenses.push(newExpense);
     writeCsv("expenses.csv", expenses);
@@ -48,6 +57,12 @@ export async function POST(request) {
     const tours = readCsv("tours.csv");
     const tourIdx = tours.findIndex((t) => t.id === body.tour_id);
     if (tourIdx !== -1) {
+      if (addToTotal === "true") {
+        const qty = parseFloat(newExpense.quantity || 1);
+        const clientCost = parseFloat(newExpense.client_cost || 0);
+        const currentTotal = parseFloat(tours[tourIdx].total_amount) || 0;
+        tours[tourIdx].total_amount = String(currentTotal + qty * clientCost);
+      }
       const tourExpenses = expenses.filter((e) => e.tour_id === body.tour_id);
       const totalAmount = parseFloat(tours[tourIdx].total_amount) || 0;
       const { expTotal, commission, net } = calcNet(totalAmount, tourExpenses);

@@ -13,6 +13,7 @@ export default function NewSupplierPage() {
     my_rate: "",
     client_rate: "",
     type: "תוכן",
+    bills_separately: false,
   });
   const [saving, setSaving] = useState(false);
   const set = (f) => (e) => setForm((p) => ({ ...p, [f]: e.target.value }));
@@ -97,6 +98,21 @@ export default function NewSupplierPage() {
               <option value="תוכן">תוכן</option>
               <option value="ספק חיצוני">ספק חיצוני</option>
             </select>
+          </div>
+          <div>
+            <label className="flex items-center gap-2 text-sm text-stone-600">
+              <input
+                type="checkbox"
+                checked={form.bills_separately}
+                onChange={(e) =>
+                  setForm((p) => ({
+                    ...p,
+                    bills_separately: e.target.checked,
+                  }))
+                }
+              />
+              ברירת מחדל: זו תוספת בתשלום נפרד (מתווספת למחיר הכולל ללקוח)
+            </label>
           </div>
           <div className="flex gap-3 justify-end pt-2">
             <button

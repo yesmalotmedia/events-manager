@@ -18,7 +18,11 @@ export function writeCsv(filename, records) {
     fs.writeFileSync(filePath, '', 'utf-8')
     return
   }
-  const output = stringify(records, { header: true, columns: Object.keys(records[0]) })
+  // Union of keys across all records, not just the first one — otherwise a
+  // field present only on some rows (e.g. a column added after older rows
+  // were written) silently gets dropped for every row, old and new alike.
+  const columns = [...new Set(records.flatMap((r) => Object.keys(r)))]
+  const output = stringify(records, { header: true, columns })
   fs.writeFileSync(filePath, output, 'utf-8')
 }
 
