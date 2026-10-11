@@ -95,6 +95,17 @@ export default function TourDetailPage() {
     load();
   };
 
+  const toggleAddToTotal = async (exp) => {
+    await fetch(`/api/expenses/${exp.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        add_to_total: exp.add_to_total === "true" ? "false" : "true",
+      }),
+    });
+    load();
+  };
+
   const sendToAccounting = async () => {
     setAccountingLoading(true);
     try {
@@ -646,15 +657,23 @@ export default function TourDetailPage() {
                         <tr key={exp.id} className="hover:bg-stone-50">
                           <td className="px-4 py-2 font-medium text-stone-800">
                             {exp.supplier_name}
-                            {exp.add_to_total === "true" && (
-                              <span
-                                className="text-xs mr-1 px-1.5 py-0.5 rounded"
-                                style={{ background: "#eef3fa", color: "#4A7FA5" }}
-                                title="מתווסף לסכום הכולל של הסיור"
-                              >
-                                תוספת
-                              </span>
-                            )}
+                            <button
+                              type="button"
+                              onClick={() => toggleAddToTotal(exp)}
+                              className="text-xs mr-1 px-1.5 py-0.5 rounded"
+                              style={
+                                exp.add_to_total === "true"
+                                  ? { background: "#eef3fa", color: "#4A7FA5" }
+                                  : { background: "#F5F0E8", color: "#B8A48A" }
+                              }
+                              title={
+                                exp.add_to_total === "true"
+                                  ? "לחץ כדי לכלול במחיר (יוריד מהסכום הכולל)"
+                                  : "לחץ כדי להפוך לתוספת בתשלום נפרד (יעלה את הסכום הכולל)"
+                              }
+                            >
+                              {exp.add_to_total === "true" ? "תוספת ✕" : "+ הפוך לתוספת"}
+                            </button>
                             {exp.notes && (
                               <span className="text-stone-400 text-xs mr-1">
                                 {" "}
