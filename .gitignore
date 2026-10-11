@@ -17,6 +17,9 @@ out/
 # Keep it out of git history; it gets seeded onto the server separately.
 /data/*.csv
 
+# local-only tooling (downloaded binaries, not source)
+.tools/
+
 # misc
 .DS_Store
 *.pem
