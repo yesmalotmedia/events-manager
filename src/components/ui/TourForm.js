@@ -57,6 +57,7 @@ export default function TourForm({ initial = {}, isEdit = false }) {
     quantity: "",
     my_cost: "",
     client_cost: "",
+    add_to_total: false,
   });
 
   useEffect(() => {
@@ -80,6 +81,7 @@ export default function TourForm({ initial = {}, isEdit = false }) {
                 quantity: e.quantity || "1",
                 my_cost: e.my_cost || e.amount || "",
                 client_cost: e.client_cost || e.my_cost || e.amount || "",
+                add_to_total: e.add_to_total === "true",
               })),
             );
           }
@@ -122,15 +124,17 @@ export default function TourForm({ initial = {}, isEdit = false }) {
   const set = (field) => (e) =>
     setForm((f) => ({ ...f, [field]: e.target.value }));
 
-  // Supplier management
-  const externalSuppliers = tourSuppliers.filter(
-    (s) => s.type === "ספק חיצוני",
-  );
-  const externalTotal = externalSuppliers.reduce((sum, s) => {
+  // Supplier management — add_to_total decides whether a supplier's client
+  // price is an à-la-carte add-on (added on top of content_amount) or
+  // already covered by the fixed content price. Same flag used on the
+  // tour detail page, seeded from the supplier's own bills_separately
+  // default when selected below.
+  const addOnSuppliers = tourSuppliers.filter((s) => s.add_to_total);
+  const addOnTotal = addOnSuppliers.reduce((sum, s) => {
     return sum + parseFloat(s.quantity || 1) * parseFloat(s.client_cost || 0);
   }, 0);
   const contentAmount = parseFloat(form.content_amount || 0);
-  const totalAmount = contentAmount + externalTotal;
+  const totalAmount = contentAmount + addOnTotal;
 
   const addSupplier = () => {
     const sup = allSuppliers.find((s) => s.id === supForm.supplier_id);
@@ -145,9 +149,16 @@ export default function TourForm({ initial = {}, isEdit = false }) {
         my_cost: supForm.my_cost || sup.my_rate || sup.default_rate || "",
         client_cost:
           supForm.client_cost || sup.client_rate || sup.default_rate || "",
+        add_to_total: supForm.add_to_total,
       },
     ]);
-    setSupForm({ supplier_id: "", quantity: "", my_cost: "", client_cost: "" });
+    setSupForm({
+      supplier_id: "",
+      quantity: "",
+      my_cost: "",
+      client_cost: "",
+      add_to_total: false,
+    });
     setAddingSupplier(false);
   };
 
@@ -159,10 +170,15 @@ export default function TourForm({ initial = {}, isEdit = false }) {
     setSaving(true);
     setError("");
     try {
+      // total_amount starts as just the base content price — each expense
+      // POST below bumps it by its own client_cost when add_to_total is
+      // set, exactly like the tour detail page does. Sending the already
+      //-summed `totalAmount` (content + add-ons) here would double-count
+      // once those same expenses get created.
       const tourData = {
         ...form,
         client_name: clientSearch || form.client_name,
-        total_amount: String(totalAmount),
+        total_amount: String(contentAmount),
         content_amount: String(contentAmount),
       };
 
@@ -195,12 +211,21 @@ export default function TourForm({ initial = {}, isEdit = false }) {
 
       // Save suppliers as expenses
       if (isEdit) {
-        // Delete existing expenses
+        // Delete existing expenses. Each DELETE adjusts total_amount based
+        // on *that expense's own* old contribution, so this can leave
+        // total_amount anywhere depending on what existed before — reset
+        // it explicitly to the (possibly just-edited) base content price
+        // right after, before re-adding the current supplier list below.
         const existingRes = await fetch(`/api/expenses?tour_id=${initial.id}`);
         const existing = await existingRes.json();
         for (const exp of Array.isArray(existing) ? existing : []) {
           await fetch(`/api/expenses/${exp.id}`, { method: "DELETE" });
         }
+        await fetch(`/api/tours/${initial.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ total_amount: String(contentAmount) }),
+        });
       }
       for (const sup of tourSuppliers) {
         await fetch("/api/expenses", {
@@ -216,6 +241,7 @@ export default function TourForm({ initial = {}, isEdit = false }) {
             client_cost: sup.client_cost,
             amount: sup.my_cost,
             notes: "",
+            add_to_total: sup.add_to_total ? "true" : "false",
           }),
         });
       }
@@ -478,6 +504,9 @@ export default function TourForm({ initial = {}, isEdit = false }) {
                           sup && sup.type === "ספק חיצוני"
                             ? form.num_participants || "1"
                             : "1",
+                        add_to_total: sup
+                          ? sup.bills_separately === "true"
+                          : f.add_to_total,
                       }));
                     }}
                   >
@@ -524,6 +553,19 @@ export default function TourForm({ initial = {}, isEdit = false }) {
                   />
                 </div>
               </div>
+              <label className="flex items-center gap-2 text-xs text-stone-600">
+                <input
+                  type="checkbox"
+                  checked={supForm.add_to_total}
+                  onChange={(e) =>
+                    setSupForm((f) => ({
+                      ...f,
+                      add_to_total: e.target.checked,
+                    }))
+                  }
+                />
+                תוספת בתשלום נפרד (מתווסף לסכום הכולל ללקוח)
+              </label>
               {supForm.supplier_id &&
                 (parseFloat(supForm.my_cost) > 0 ||
                   parseFloat(supForm.client_cost) > 0) && (
@@ -570,7 +612,7 @@ export default function TourForm({ initial = {}, isEdit = false }) {
                     ספק
                   </th>
                   <th className="text-right px-3 py-2 text-xs font-medium text-stone-500">
-                    סוג
+                    תוספת?
                   </th>
                   <th className="text-right px-3 py-2 text-xs font-medium text-stone-500">
                     כמות
@@ -597,8 +639,28 @@ export default function TourForm({ initial = {}, isEdit = false }) {
                       <td className="px-3 py-2 font-medium text-stone-800">
                         {s.supplier_name}
                       </td>
-                      <td className="px-3 py-2 text-xs text-stone-500">
-                        {s.type}
+                      <td className="px-3 py-2 text-xs">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setTourSuppliers((prev) =>
+                              prev.map((row, i) =>
+                                i === idx
+                                  ? { ...row, add_to_total: !row.add_to_total }
+                                  : row,
+                              ),
+                            )
+                          }
+                          className="px-1.5 py-0.5 rounded"
+                          style={
+                            s.add_to_total
+                              ? { background: "#eef3fa", color: "#4A7FA5" }
+                              : { background: "#F5F0E8", color: "#B8A48A" }
+                          }
+                          title="לחץ להחליף בין תוספת בתשלום נפרד לכלול במחיר"
+                        >
+                          {s.add_to_total ? "תוספת" : "כלול במחיר"}
+                        </button>
                       </td>
                       <td className="px-3 py-2 text-stone-600">{qty}</td>
                       <td className="px-3 py-2 text-stone-600">
@@ -637,7 +699,7 @@ export default function TourForm({ initial = {}, isEdit = false }) {
                 ₪{contentAmount.toLocaleString("he-IL")}
               </span>
             </div>
-            {externalSuppliers.map((s, i) => (
+            {addOnSuppliers.map((s, i) => (
               <div key={i} className="flex justify-between">
                 <span className="text-stone-500">{s.supplier_name}</span>
                 <span>
