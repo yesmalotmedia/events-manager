@@ -1,7 +1,7 @@
 import { withAuth } from "next-auth/middleware";
 
 export default withAuth({
-  secret: process.env.NEXTAUTH_SECRET || "mial2024secret-fallback",
+  secret: process.env.NEXTAUTH_SECRET,
   pages: { signIn: "/login" },
 });
 
@@ -19,5 +19,6 @@ export const config = {
     "/api/documents/:path*",
     "/api/transactions/:path*",
     "/api/send-email",
+    "/api/bug-report",
   ],
 };
