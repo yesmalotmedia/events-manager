@@ -359,7 +359,7 @@ export default function TourDetailPage() {
             <h3 className="font-semibold text-stone-700 text-sm mb-4">
               פרטי לקוח
             </h3>
-            <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               {[
                 ["שם מזמין", tour.client_name],
                 ["ח.פ / עמותה", tour.client_id],
@@ -387,7 +387,7 @@ export default function TourDetailPage() {
             <h3 className="font-semibold text-stone-700 text-sm mb-4">
               פרטי הפעילות
             </h3>
-            <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               {[
                 ["סוג האירוע", tour.event_type],
                 ["מיקום", tour.location],
@@ -431,7 +431,7 @@ export default function TourDetailPage() {
                 onSubmit={addExpense}
                 className="px-5 py-4 bg-stone-50 border-b border-stone-100 space-y-3"
               >
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   <div>
                     <label className="label">ספק</label>
                     <select
@@ -622,6 +622,7 @@ export default function TourDetailPage() {
               </div>
             ) : (
               expenses.length > 0 && (
+                <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr
@@ -728,6 +729,7 @@ export default function TourDetailPage() {
                     </tr>
                   </tbody>
                 </table>
+                </div>
               )
             )}
           </div>

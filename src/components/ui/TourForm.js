@@ -481,8 +481,8 @@ export default function TourForm({ initial = {}, isEdit = false }) {
 
           {addingSupplier && (
             <div className="bg-stone-50 rounded-lg p-4 space-y-3">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="md:col-span-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="sm:col-span-2">
                   <label className="label">ספק</label>
                   <select
                     className="input"
@@ -602,6 +602,7 @@ export default function TourForm({ initial = {}, isEdit = false }) {
           )}
 
           {tourSuppliers.length > 0 && (
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr
@@ -686,6 +687,7 @@ export default function TourForm({ initial = {}, isEdit = false }) {
                 })}
               </tbody>
             </table>
+            </div>
           )}
 
           {/* Summary */}

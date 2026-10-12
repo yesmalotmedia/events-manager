@@ -102,7 +102,7 @@ export default function AccountingPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="card p-5 text-center">
           <div className="text-2xl font-bold text-green-700">₪{totalCredit.toLocaleString('he-IL')}</div>
           <div className="text-sm text-stone-500 mt-1">סה"כ מגיע לי</div>
@@ -168,7 +168,7 @@ export default function AccountingPage() {
         <div className="card p-5">
           <h3 className="font-semibold text-stone-700 text-sm mb-4">הוספת תנועה</h3>
           <form onSubmit={handleAdd}>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
               <div>
                 <label className="label">תאריך</label>
                 <input className="input" type="date" value={form.date} onChange={set('date')} required />

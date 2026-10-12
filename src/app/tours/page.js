@@ -77,7 +77,43 @@ export default function ToursPage() {
         </div>
       </div>
 
-      <div className="card overflow-hidden">
+      {/* Mobile: card list (table below is sm:+ only — 7 columns don't fit a phone) */}
+      <div className="sm:hidden space-y-2">
+        {loading && <div className="card text-center py-8 text-stone-400 text-sm">טוען...</div>}
+        {!loading && sorted.length === 0 && (
+          <div className="card text-center py-8 text-stone-400 text-sm">לא נמצאו סיורים</div>
+        )}
+        {sorted.map(tour => (
+          <div
+            key={tour.id}
+            onClick={() => router.push(`/tours/${tour.id}`)}
+            className="card p-4 active:bg-stone-50 cursor-pointer space-y-2"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="font-medium text-stone-900 truncate">{tour.client_name || '—'}</div>
+                <div className="text-xs text-stone-500 truncate mt-0.5">{tour.event_type || '—'}</div>
+              </div>
+              <div className="shrink-0">{statusBadge(tour.status)}</div>
+            </div>
+            <div className="flex items-center justify-between text-xs text-stone-500">
+              <span>{tour.date || '—'}{tour.time ? ` • ${tour.time}` : ''}</span>
+              <span>{tour.location || '—'}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm pt-1 border-t border-stone-50">
+              <span className="font-medium text-stone-900">
+                {tour.total_amount ? `₪${parseFloat(tour.total_amount).toLocaleString('he-IL')}` : '—'}
+              </span>
+              <span className="font-medium text-green-700">
+                {tour.net_payment ? `נטו: ₪${parseFloat(tour.net_payment).toLocaleString('he-IL')}` : ''}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop/tablet: full table */}
+      <div className="hidden sm:block card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

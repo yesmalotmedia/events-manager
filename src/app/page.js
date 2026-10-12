@@ -70,7 +70,7 @@ export default function Dashboard() {
 
       {/* Alert */}
       {notSent.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between flex-wrap gap-3">
           <div>
             <div className="font-medium text-amber-800 text-sm">
               {notSent.length} סיורים לא נשלחו להנהלת חשבונות
@@ -94,9 +94,9 @@ export default function Dashboard() {
             <div className="px-6 py-8 text-center text-stone-600 text-sm">אין סיורים קרובים</div>
           )}
           {upcoming.map(tour => (
-            <Link key={tour.id} href={`/tours/${tour.id}`} className="flex items-center justify-between px-6 py-4 hover:bg-stone-50 transition-colors">
-              <div className="flex items-center gap-4">
-                <div className="text-center bg-brand-50 rounded-lg px-3 py-2 min-w-[52px]">
+            <Link key={tour.id} href={`/tours/${tour.id}`} className="flex items-center justify-between gap-3 px-4 sm:px-6 py-4 hover:bg-stone-50 transition-colors">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                <div className="text-center bg-brand-50 rounded-lg px-3 py-2 min-w-[52px] shrink-0">
                   <div className="text-brand-600 font-bold text-sm leading-none">
                     {tour.date ? tour.date.split('/')[0] : '—'}
                   </div>
@@ -104,13 +104,13 @@ export default function Dashboard() {
                     {tour.date ? ['', 'ינו', 'פבר', 'מרץ', 'אפר', 'מאי', 'יוני', 'יולי', 'אוג', 'ספט', 'אוק', 'נוב', 'דצמ'][parseInt(tour.date.split('/')[1])] || '' : ''}
                   </div>
                 </div>
-                <div>
-                  <div className="font-medium text-stone-900 text-sm">{tour.client_name}</div>
-                  <div className="text-stone-600 text-xs mt-0.5">{tour.event_type} • {tour.location}</div>
+                <div className="min-w-0">
+                  <div className="font-medium text-stone-900 text-sm truncate">{tour.client_name}</div>
+                  <div className="text-stone-600 text-xs mt-0.5 truncate">{tour.event_type} • {tour.location}</div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="text-stone-700 text-sm font-medium">₪{parseFloat(tour.total_amount || 0).toLocaleString('he-IL')}</div>
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                <div className="text-stone-700 text-sm font-medium whitespace-nowrap">₪{parseFloat(tour.total_amount || 0).toLocaleString('he-IL')}</div>
                 {statusBadge(tour.status)}
               </div>
             </Link>

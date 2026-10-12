@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 
-export default function BugReportButton() {
+export default function BugReportButton({ variant = 'floating' }) {
   const [open, setOpen]         = useState(false)
   const [description, setDesc]  = useState('')
   const [status, setStatus]     = useState('idle') // idle | sending | done | error
@@ -27,15 +27,30 @@ export default function BugReportButton() {
 
   return (
     <>
-      {/* Floating button */}
-      <button
-        onClick={() => { setOpen(true); setStatus('idle') }}
-        className="fixed top-6 left-6 z-40 w-11 h-11 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110"
-        style={{ background: '#dc2626' }}
-        title="דווח על תקלה"
-      >
-        <span className="text-white text-lg leading-none">!</span>
-      </button>
+      {/* Trigger button — "inline" sits inside the mobile top bar (no safe
+          floating spot exists there: every page puts its own "+ add" button
+          in that same top-left corner on mobile). "floating" is the
+          always-visible circle used on desktop, where there's no top bar
+          competing for that corner. */}
+      {variant === 'inline' ? (
+        <button
+          onClick={() => { setOpen(true); setStatus('idle') }}
+          className="w-8 h-8 rounded-full shadow flex items-center justify-center shrink-0"
+          style={{ background: '#dc2626' }}
+          title="דווח על תקלה"
+        >
+          <span className="text-white text-sm leading-none">!</span>
+        </button>
+      ) : (
+        <button
+          onClick={() => { setOpen(true); setStatus('idle') }}
+          className="hidden md:flex fixed top-6 left-6 z-40 w-11 h-11 rounded-full shadow-lg items-center justify-center transition-all hover:scale-110"
+          style={{ background: '#dc2626' }}
+          title="דווח על תקלה"
+        >
+          <span className="text-white text-lg leading-none">!</span>
+        </button>
+      )}
 
       {/* Modal */}
       {open && (

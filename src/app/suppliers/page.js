@@ -201,6 +201,7 @@ export default function SuppliersPage() {
       )}
 
       <div className="card overflow-hidden">
+       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr
@@ -289,6 +290,7 @@ export default function SuppliersPage() {
             ))}
           </tbody>
         </table>
+       </div>
       </div>
     </div>
   );
