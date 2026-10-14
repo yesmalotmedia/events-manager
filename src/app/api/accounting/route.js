@@ -89,6 +89,7 @@ export async function POST(request) {
         process.env.ACCOUNTING_SHEET_GID,
         values,
       );
+      console.log("[accounting] got reqId from appendToSheet:", reqId);
       if (reqId) {
         // Self-hosted instead of Google Drive: service accounts have no
         // storage quota of their own (Drive upload fails outright unless
