@@ -1,6 +1,7 @@
 import { readCsv, writeCsv, getNextId } from "@/lib/csv";
 import { markCheckboxInSheet } from "@/lib/sheetsSync";
-import { appendToSheet } from "@/lib/sheets";
+import { appendToSheet, updatePdfLink } from "@/lib/sheets";
+import { savePdf } from "@/lib/pdfStorage";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { TourPdfDocument } from "@/components/ui/TourPdf";
 import { getLogoBuffer } from "@/lib/logoData";
@@ -88,6 +89,22 @@ export async function POST(request) {
         process.env.ACCOUNTING_SHEET_GID,
         values,
       );
+      if (reqId) {
+        // Self-hosted instead of Google Drive: service accounts have no
+        // storage quota of their own (Drive upload fails outright unless
+        // the destination is a Shared Drive, which requires a paid Google
+        // Workspace plan — not available on a personal Gmail account).
+        // Serving the PDF ourselves from the persistent volume sidesteps
+        // that entirely.
+        savePdf(reqId, pdfBuffer);
+        const docUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/doc/${reqId}`;
+        await updatePdfLink(
+          process.env.ACCOUNTING_SPREADSHEET_ID,
+          process.env.ACCOUNTING_SHEET_GID,
+          reqId,
+          docUrl,
+        );
+      }
     } catch (e) {
       console.error("Accounting sheet error:", e.message);
     }
