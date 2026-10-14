@@ -2,7 +2,7 @@ import { readCsv } from "@/lib/csv";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { TourPdfDocument } from "@/components/ui/TourPdf";
 import { getLogoBuffer } from "@/lib/logoData";
-import { Resend } from "resend";
+import { createTransporter } from "@/lib/mailer";
 import { createElement } from "react";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +17,12 @@ function getEmailTheme(eventType) {
 }
 
 export async function POST(request) {
-  const resend = new Resend(process.env.RESEND_API_KEY);
+  // Sent via Gmail SMTP (lib/mailer.js), not Resend: Resend's shared
+  // onboarding@resend.dev sender domain only delivers to the Resend
+  // account owner's own address, silently dropping mail to anyone
+  // else (every real client) without an error. Gmail delivers to any
+  // recipient since it's a real, already-verified sending domain.
+  const transporter = createTransporter();
   try {
     const body = await request.json();
     const {
@@ -89,16 +94,16 @@ export async function POST(request) {
     }
 
     for (const to of recipients) {
-      const emailData = {
-        from: process.env.RESEND_FROM || "onboarding@resend.dev",
+      const mailOptions = {
+        from: `"רוח צפת" <${process.env.GMAIL_USER}>`,
         to,
         subject: titleLine,
         html: htmlBody,
       };
       if (buffer) {
-        emailData.attachments = [{ filename: fileName, content: buffer }];
+        mailOptions.attachments = [{ filename: fileName, content: buffer }];
       }
-      await resend.emails.send(emailData);
+      await transporter.sendMail(mailOptions);
     }
 
     return Response.json({ success: true, sent: recipients.length });
