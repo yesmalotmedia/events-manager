@@ -2,7 +2,7 @@ import { readCsv } from "@/lib/csv";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { TourPdfDocument } from "@/components/ui/TourPdf";
 import { getLogoBuffer } from "@/lib/logoData";
-import { createTransporter } from "@/lib/mailer";
+import { Resend } from "resend";
 import { createElement } from "react";
 
 export const dynamic = "force-dynamic";
@@ -17,12 +17,14 @@ function getEmailTheme(eventType) {
 }
 
 export async function POST(request) {
-  // Sent via Gmail SMTP (lib/mailer.js), not Resend: Resend's shared
-  // onboarding@resend.dev sender domain only delivers to the Resend
-  // account owner's own address, silently dropping mail to anyone
-  // else (every real client) without an error. Gmail delivers to any
-  // recipient since it's a real, already-verified sending domain.
-  const transporter = createTransporter();
+  // Back to Resend (HTTPS API), not Gmail SMTP: confirmed via Railway's
+  // own deploy logs that outbound SMTP (both port 465 and 587) times out
+  // at the TCP connection stage from this host — ETIMEDOUT / command:
+  // 'CONN', reproduced consistently, not a one-off. HTTPS (443) doesn't
+  // have that problem. The original blocker for Resend (its shared
+  // onboarding@resend.dev sender only delivers to the account owner) is
+  // now resolved — RESEND_FROM points at a verified custom domain.
+  const resend = new Resend(process.env.RESEND_API_KEY);
   try {
     const body = await request.json();
     const {
@@ -94,16 +96,16 @@ export async function POST(request) {
     }
 
     for (const to of recipients) {
-      const mailOptions = {
-        from: `"רוח צפת" <${process.env.GMAIL_USER}>`,
+      const emailData = {
+        from: `רוח צפת <${process.env.RESEND_FROM}>`,
         to,
         subject: titleLine,
         html: htmlBody,
       };
       if (buffer) {
-        mailOptions.attachments = [{ filename: fileName, content: buffer }];
+        emailData.attachments = [{ filename: fileName, content: buffer }];
       }
-      await transporter.sendMail(mailOptions);
+      await resend.emails.send(emailData);
     }
 
     return Response.json({ success: true, sent: recipients.length });
